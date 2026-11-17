@@ -9,6 +9,14 @@
   <a href="https://www.crescoprime.com">crescoprime.com</a>
 </p>
 
+<p align="center">
+  <img alt="Astro 7" src="https://img.shields.io/badge/Astro-7.3-242424?logo=astro&logoColor=c6f432" />
+  <img alt="GSAP 3" src="https://img.shields.io/badge/GSAP-3.15-242424?logo=greensock&logoColor=c6f432" />
+  <img alt="Three.js" src="https://img.shields.io/badge/Three.js-0.187-242424?logo=threedotjs&logoColor=c6f432" />
+  <img alt="Lenis" src="https://img.shields.io/badge/Lenis-1.3-242424" />
+  <img alt="Cloudflare Pages" src="https://img.shields.io/badge/Cloudflare_Pages-hosting-242424?logo=cloudflarepages&logoColor=c6f432" />
+</p>
+
 ---
 
 ## Overview
@@ -19,6 +27,25 @@ WebGL, and page transitions in which the C and the P of the logo lock together.
 
 Every page's content reads without JavaScript, the motion respects reduced-motion settings, and the 3D library loads
 only when it is needed.
+
+## Tech stack
+
+| Layer | Technology | Version | Used for |
+| --- | --- | --- | --- |
+| Framework | [Astro](https://astro.build) | 7.3.8 | Static site generation, components, scoped CSS, per-page `<head>` |
+| Build tool | [Vite](https://vite.dev) (bundled with Astro) | 8 | Dev server, hot reload, production bundling |
+| Language | HTML, CSS, JavaScript (ES modules), TypeScript in Astro frontmatter | | Markup, styles, scripts |
+| Animation | [GSAP](https://gsap.com) with ScrollTrigger | 3.15.1 | Entrance, page transitions, menu, scroll reveals |
+| Smooth scroll | [Lenis](https://lenis.darkroom.engineering) | 1.3.27 | Smooth scrolling on one clock with GSAP |
+| 3D | [Three.js](https://threejs.org) | 0.187.0 | The extruded, lit 3D logo (lazy-loaded) |
+| Typography | [Mona Sans](https://github.com/github/mona-sans) and [Geist Mono](https://vercel.com/font) via [Fontsource](https://fontsource.org) | 5.3.0 | Self-hosted variable fonts (width and weight axes) |
+| SEO | schema.org JSON-LD, Open Graph, Twitter cards, sitemap | | Search results and link previews |
+| Testing | [Playwright](https://playwright.dev) in Chromium, Edge and WebKit; axe accessibility checks | | Layout at 15 screen sizes, navigation, transitions |
+| Runtime | [Node.js](https://nodejs.org) | 22.20.0 | Builds (`.node-version`) |
+| Hosting | [Cloudflare Pages](https://pages.cloudflare.com) | | Static hosting and global CDN |
+
+No UI framework, CSS framework or tracking script is used: the site ships plain HTML, bundled CSS and small scripts
+that load only where they are needed.
 
 ## Features
 
@@ -31,16 +58,6 @@ only when it is needed.
 - **Search engines:** canonical URLs, Open Graph and Twitter cards with a share image, schema.org JSON-LD
   (ProfessionalService, WebSite, Service list, Person, breadcrumbs), `sitemap.xml` and `robots.txt`.
 - **Privacy:** no cookies, analytics, trackers or forms.
-
-## Tech stack
-
-| Area | Tool |
-| --- | --- |
-| Framework | [Astro](https://astro.build) 7, static output |
-| Motion | [GSAP](https://gsap.com) 3 with ScrollTrigger, [Lenis](https://lenis.darkroom.engineering) |
-| 3D | [Three.js](https://threejs.org) |
-| Type | Mona Sans and Geist Mono, self-hosted variable fonts via Fontsource |
-| Hosting | Cloudflare Pages |
 
 ## Getting started
 
