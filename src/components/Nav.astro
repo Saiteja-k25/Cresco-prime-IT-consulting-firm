@@ -1,0 +1,420 @@
+---
+// Floating nav bar and full-screen menu, after the tux.co reference: a frosted bar, a lime panel with huge links.
+import Mark from './Mark.astro';
+
+// Contact is the footer, which every page has: "#contact" stays on the current page.
+const links = [
+  { href: '/services/', label: 'Services', meta: 'What we do', note: 'Advise, build, automate, run' },
+  { href: '/about/', label: 'About', meta: 'Since 2026', note: 'Cresco means “I grow”' },
+  { href: '/founder/', label: 'Founder', meta: 'Kalyan Boddula', note: 'Founder, Director and CEO' },
+  { href: '#contact', label: 'Contact', meta: 'Email us', note: 'hr@crescoprime.com' },
+];
+const path = (p: string) => p.replace(/\/$/, '') || '/'; // "/about/" and "/about" are the same page
+const current = (href: string) => (path(href) === path(Astro.url.pathname) ? 'page' : undefined);
+---
+<header class="nav">
+  <div class="nav__bar">
+    <a class="nav__brand" href="/" aria-label="Cresco Prime, home">
+      <Mark class="nav__mark" />
+      <span>Cresco Prime</span>
+    </a>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+      <span class="nav__dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    </button>
+  </div>
+
+  <div class="menu" id="menu" hidden>
+    <p class="menu__corner menu__corner--tl mono" data-scramble>IT services and consulting<br />Frisco, Texas</p>
+    <p class="menu__corner menu__corner--tr">
+      <a class="menu__mail" href="mailto:hr@crescoprime.com" aria-label="Email hr@crescoprime.com">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5h17v11h-17zM3.5 7l8.5 6.5L20.5 7" /></svg>
+      </a>
+    </p>
+
+    <nav class="menu__nav" aria-label="Menu">
+      <ul class="menu__list" role="list">
+        {links.map((l) => (
+          <li>
+            <a class="menu__row" href={l.href} aria-current={current(l.href)}>
+              <span class="menu__meta mono" aria-hidden="true" data-scramble>{l.meta}</span>
+              <span class="menu__mask"><span class="menu__word">{l.label}</span></span>
+              <span class="menu__meta menu__meta--note mono" aria-hidden="true" data-scramble>{l.note}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <p class="menu__corner menu__corner--bl mono" data-scramble>Innovating today.<br />Empowering tomorrow.</p>
+    <p class="menu__corner menu__corner--bc mono"><a href="/privacy/">Privacy policy</a><a href="/terms/">Terms</a></p>
+    <p class="menu__corner menu__corner--br mono">
+      <a href="https://www.linkedin.com/company/cresco-prime/" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://www.instagram.com/crescoprime/" target="_blank" rel="noopener">Instagram</a>
+    </p>
+  </div>
+</header>
+
+<script>
+  import { gsap } from 'gsap';
+  import { lenis } from '../scripts/scroll.js';
+
+  const root = document.documentElement;
+  const toggle = document.querySelector('.nav__toggle');
+  const menu = document.querySelector('#menu');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const page = () => document.querySelectorAll('main, .foot');
+  let open = false;
+
+  // Letters run through random capitals and settle left to right, as the reference's corner text does.
+  const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const scramble = (el) => {
+    const nodes = [];
+    const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    while (walk.nextNode()) nodes.push(walk.currentNode);
+    nodes.forEach((n) => (n.final ??= n.textContent));
+    const p = { v: 0 };
+    gsap.to(p, {
+      v: 1,
+      duration: 0.7,
+      ease: 'none',
+      onUpdate: () => nodes.forEach((n) => {
+        const k = Math.floor(n.final.length * p.v);
+        n.textContent = n.final.slice(0, k) + n.final.slice(k).replace(/[A-Za-z0-9]/g, () => LETTERS[(Math.random() * 26) | 0]);
+      }),
+      onComplete: () => nodes.forEach((n) => (n.textContent = n.final)),
+    });
+  };
+
+  const setOpen = (next, instant = false) => {
+    if (next === open) return;
+    open = next;
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    root.classList.toggle('menu-open', open);
+    page().forEach((el) => (el.inert = open)); // keyboard stays inside the bar and the menu
+
+    if (open) {
+      menu.hidden = false;
+      lenis?.stop();
+      if (reduce || instant) return void gsap.set(menu, { yPercent: 0 });
+      gsap.fromTo(menu, { yPercent: 100 }, { yPercent: 0, duration: 0.7, ease: 'expo.inOut' });
+      gsap.fromTo(menu.querySelectorAll('.menu__word'), { yPercent: 105 }, { yPercent: 0, duration: 0.9, ease: 'expo.out', stagger: 0.06, delay: 0.35 });
+      menu.querySelectorAll('.menu__corner[data-scramble]').forEach((el) => gsap.delayedCall(0.45, () => scramble(el)));
+    } else {
+      lenis?.start();
+      const done = () => (menu.hidden = true);
+      if (reduce || instant) {
+        gsap.set(menu, { yPercent: 100 });
+        done();
+      } else {
+        gsap.to(menu, { yPercent: 100, duration: 0.6, ease: 'expo.inOut', onComplete: done });
+      }
+    }
+  };
+
+  toggle.addEventListener('click', () => setOpen(!open));
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && open) {
+      setOpen(false);
+      toggle.focus();
+    }
+  });
+  // The page transition covers the screen before it changes the view: close the menu behind it, instantly.
+  document.addEventListener('wipe:covered', () => setOpen(false, true));
+  // Without motion there is no transition, so a menu link closes the menu itself.
+  if (reduce) menu.addEventListener('click', (e) => e.target.closest('a') && setOpen(false, true));
+  // Each row's side notes decode when the row is hovered or focused.
+  if (!reduce) {
+    menu.querySelectorAll('.menu__row').forEach((row) => {
+      const play = () => row.querySelectorAll('[data-scramble]').forEach(scramble);
+      row.addEventListener('pointerenter', play);
+      row.addEventListener('focus', play);
+    });
+  }
+</script>
+
+<style>
+  /* The bar: a short pill of frosted charcoal glass, centred, floating over every section. Only the logo and the menu
+     button: the menu holds the links (client's call). */
+  .nav__bar {
+    position: fixed;
+    z-index: 55;
+    top: var(--pad);
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    width: min(20rem, 100% - 2 * var(--pad));
+    height: 3.75rem;
+    margin: 0 auto;
+    padding: 0 0.4375rem 0 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--ground) 16%, transparent);
+    border-radius: 999px;
+    background: rgb(36 36 36 / 0.88); /* browsers before 2023, which lack color-mix */
+    background: color-mix(in srgb, var(--ink) 88%, transparent); /* dark enough to read as charcoal over paper */
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    backdrop-filter: blur(16px) saturate(150%);
+    box-shadow:
+      0 8px 32px rgb(0 0 0 / 0.16),
+      inset 0 1px 0 rgb(255 255 255 / 0.1);
+    color: var(--ground);
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .nav__bar {
+      background: color-mix(in srgb, var(--ink) 94%, transparent);
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .nav__bar {
+      background: var(--ink);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+  :global(html.has-intro) .nav {
+    visibility: hidden; /* the entrance brings the bar in at its end */
+  }
+
+  .nav__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 2.75rem;
+    margin-right: auto;
+    color: inherit;
+    font-size: 0.875rem;
+    font-weight: 700;
+    font-stretch: 90%;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .nav__brand :global(.nav__mark) {
+    width: 1.5rem;
+    height: auto;
+    transition: transform 0.3s var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .nav__brand:hover :global(.nav__mark) {
+      transform: translateY(-2px);
+    }
+  }
+
+
+  /* Toggle: four dots that turn into a cross of dots when the menu is open. */
+  .nav__toggle {
+    display: grid;
+    place-items: center;
+    width: 2.875rem;
+    height: 2.875rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--ground);
+    color: var(--ink);
+    cursor: pointer;
+    transition: background-color 0.3s var(--ease-out), transform 0.16s var(--ease-out);
+  }
+  .nav__toggle:focus-visible {
+    outline-color: var(--ground);
+  }
+  .nav__toggle:active {
+    transform: scale(0.94);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .nav__toggle:hover {
+      background: var(--accent);
+    }
+  }
+  :global(html.menu-open) .nav__toggle {
+    background: var(--accent);
+  }
+  .nav__dots {
+    display: grid;
+    grid-template-columns: repeat(2, 5px);
+    gap: 4px;
+    transition: transform 0.45s var(--ease-out);
+  }
+  .nav__dots i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  :global(html.menu-open) .nav__dots {
+    transform: rotate(45deg);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .nav__toggle:hover .nav__dots {
+      transform: scale(1.2); /* the dots spread a little under the pointer */
+    }
+    :global(html.menu-open) .nav__toggle:hover .nav__dots {
+      transform: rotate(45deg) scale(1.2);
+    }
+  }
+
+  /* The menu: a lime panel, the links set huge in the display style, notes in the corners. */
+  .menu {
+    position: fixed;
+    z-index: 50;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: calc(var(--pad) + 4.75rem) var(--pad) var(--pad);
+    background: var(--accent);
+    color: var(--ink);
+  }
+  .menu[hidden] {
+    display: none; /* display: grid above would otherwise beat the hidden attribute */
+  }
+  .menu__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    width: calc(100vw - 2 * var(--pad));
+  }
+  .menu__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 2rem;
+    color: inherit;
+    text-decoration: none;
+  }
+  .menu__mask {
+    display: block;
+    overflow: hidden;
+    padding-top: 0.04em;
+  }
+  .menu__word {
+    display: block;
+    font-size: min(12.5vw, 17.5svh);
+    font-stretch: 75%;
+    font-weight: 560;
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    text-align: center;
+    text-transform: uppercase;
+    transition: color 0.3s var(--ease-out);
+  }
+  .menu__meta {
+    opacity: 0;
+    transition: opacity 0.3s var(--ease-out);
+  }
+  .menu__meta--note {
+    text-align: right;
+  }
+  .menu__row:focus-visible {
+    outline-offset: -2px;
+  }
+  .menu__row:focus-visible .menu__meta {
+    opacity: 1;
+  }
+  .menu__row:focus-visible .menu__word {
+    color: color-mix(in srgb, var(--ink) 62%, var(--accent));
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .menu__row:hover .menu__meta {
+      opacity: 1;
+    }
+    .menu__row:hover .menu__word {
+      color: color-mix(in srgb, var(--ink) 62%, var(--accent)); /* the hovered link steps back, as in the reference */
+    }
+  }
+
+  .menu__corner {
+    position: absolute;
+    margin: 0;
+  }
+  .menu__corner a {
+    color: inherit;
+    text-underline-offset: 0.25em;
+  }
+  .menu__corner--tl {
+    top: calc(var(--pad) + 0.6rem);
+    left: var(--pad);
+  }
+  .menu__corner--tr {
+    top: var(--pad); /* level with the bar */
+    right: var(--pad);
+  }
+  /* Email as a big round icon, the same height as the bar. */
+  .menu__corner .menu__mail {
+    display: grid;
+    place-items: center;
+    width: 3.75rem;
+    height: 3.75rem;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--ground);
+    transition: color 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+  }
+  .menu__mail svg {
+    width: 1.625rem;
+    height: 1.625rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+  .menu__mail:focus-visible {
+    color: var(--accent);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .menu__mail:hover {
+      color: var(--accent);
+      transform: translateY(-2px);
+    }
+  }
+  .menu__corner--bl {
+    bottom: var(--pad);
+    left: var(--pad);
+  }
+  .menu__corner--bc {
+    bottom: var(--pad);
+    left: 50%;
+    display: flex;
+    gap: 1.5rem;
+    translate: -50% 0;
+  }
+  .menu__corner--br {
+    bottom: var(--pad);
+    right: var(--pad);
+    display: flex;
+    gap: 1.5rem;
+  }
+  .menu__corner a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+
+  @media (max-width: 820px) {
+    .menu__corner--tl,
+    .menu__corner--tr {
+      display: none; /* no room beside the bar on a phone; the Contact row holds the email */
+    }
+    .menu__row {
+      grid-template-columns: 1fr;
+    }
+    .menu__meta {
+      display: none;
+    }
+    .menu__word {
+      font-size: min(19vw, 14svh);
+    }
+    .menu__corner--bl {
+      display: none;
+    }
+    .menu__corner--bc {
+      left: var(--pad);
+      translate: none;
+    }
+    .menu__corner--br {
+      bottom: calc(var(--pad) + 2.75rem); /* a row of its own above the legal links: both rows don't fit one phone line */
+      left: var(--pad);
+      right: auto;
+    }
+  }
+</style>

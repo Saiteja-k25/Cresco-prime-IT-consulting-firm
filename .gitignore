@@ -1,0 +1,20 @@
+# Dependencies and build output
+node_modules/
+dist/
+.astro/
+
+# Local tooling
+.jury/
+.claude/
+
+# Working material kept out of the repository: screen recordings and copies of other sites used as references,
+# and the client's original logo package (the site draws its logo from src/lib/mark.js)
+references-from-other-website-inspirations/
+Cresco-prime-logos-2026/
+
+# Environment, logs and OS files
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db

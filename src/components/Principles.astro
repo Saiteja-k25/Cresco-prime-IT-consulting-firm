@@ -1,0 +1,81 @@
+---
+// The three words from the company's LinkedIn ("reliable, scalable, and future-ready"), each made concrete.
+// Draft copy for the client to approve: the first line is a promise about their process.
+const principles = [
+  { word: 'Reliable', line: 'We test every system before release and keep watching it after.' },
+  { word: 'Scalable', line: 'It takes ten more users or ten thousand without a rebuild.' },
+  { word: 'Future-ready', line: 'We build with tools your team can still hire for in five years.' },
+];
+---
+<section class="pr" aria-labelledby="pr-title">
+  <h2 class="pr__title" id="pr-title">Three things we check before we hand a system over.</h2>
+  <ul class="pr__list" role="list">
+    {principles.map((p) => (
+      <li class="pr__item">
+        <strong class="pr__word">{p.word}.</strong> {p.line}
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .pr {
+    --rule: color-mix(in srgb, var(--ground) 18%, var(--ink));
+    --soft: color-mix(in srgb, var(--ground) 64%, var(--ink));
+    padding: clamp(5rem, 11vw, 10rem) var(--pad);
+    background: var(--ink);
+    color: var(--ground);
+  }
+
+  /* Desktop: the heading holds a narrow left column, the statements take the rest. */
+  .pr {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    gap: 2rem clamp(2rem, 5vw, 5rem);
+    align-items: start;
+  }
+
+  .pr__title {
+    max-width: 20ch;
+    margin: 0;
+    text-wrap: balance; /* no single word left on the last line */
+    padding-top: clamp(1.75rem, 3.5vw, 3rem); /* lines up with the first statement */
+    color: var(--soft);
+    font-size: clamp(1.125rem, 1.5vw, 1.375rem);
+    font-weight: 400;
+    line-height: 1.35;
+  }
+
+  .pr__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* Each principle is one sentence set large; the keyword leads in the display style. */
+  .pr__item {
+    padding: clamp(1.75rem, 3.5vw, 3rem) 0;
+    border-top: 1px solid var(--rule);
+    font-size: clamp(1.75rem, 3.4vw, 3.5rem);
+    font-weight: 300;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+  }
+
+  @media (max-width: 820px) {
+    .pr {
+      grid-template-columns: 1fr;
+    }
+    .pr__title {
+      padding-top: 0;
+    }
+  }
+
+  .pr__word {
+    font-stretch: 78%;
+    font-weight: 680;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+  }
+</style>

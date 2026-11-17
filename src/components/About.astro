@@ -1,0 +1,126 @@
+---
+// Company story (the founder has a page of his own). Copy is a draft from the company's and Kalyan's LinkedIn pages, for the client to approve.
+import { C } from '../lib/mark.js';
+
+const spiral = C.map((p) => p.join(',')).join(' ');
+---
+<section class="about" id="about" aria-labelledby="about-title">
+  <div class="about__story">
+    <!-- The C of the mark is one band that curls inward: it draws itself as the section scrolls by. -->
+    <svg class="about__c" viewBox="-292 6 278 582" aria-hidden="true">
+      <polygon points={spiral} pathLength="1" />
+    </svg>
+
+    <div class="about__text">
+      <h2 class="about__title" id="about-title">
+        <span class="about__light">Cresco means</span> &ldquo;I&nbsp;grow.&rdquo;
+      </h2>
+      <p class="about__lede">
+        Cresco Prime is an IT services and consulting firm in Frisco, Texas. We work with companies whose
+        technology has fallen behind their growth: the spreadsheet that runs the business, the website nobody
+        can update, the server in a closet. We replace what holds you back and stay on to keep it running.
+      </p>
+      <dl class="about__facts">
+        <div><dt class="mono">Based in</dt><dd>Frisco, Texas</dd></div>
+        <div><dt class="mono">Founded</dt><dd>2026</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  // The section's one moment: the outline traces the C, then fills in, once, as it comes into view.
+  // Played on a clock, not scrubbed: on the About page the C is already on the first screen.
+  // Without motion (or without this script) the C is simply solid.
+  gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
+    const c = document.querySelector('.about__c');
+    gsap
+      .timeline({ delay: 0.5, scrollTrigger: { trigger: c, start: 'top 90%', once: true } })
+      .fromTo(c.querySelector('polygon'), { strokeDashoffset: 1, fillOpacity: 0 }, { strokeDashoffset: 0, duration: 1.8, ease: 'power2.inOut' })
+      .to(c.querySelector('polygon'), { fillOpacity: 1, duration: 0.6, ease: 'power1.out' });
+  });
+</script>
+
+<style>
+  .about {
+    padding: clamp(2rem, 5vw, 4rem) var(--pad) clamp(5rem, 11vw, 10rem); /* the page head sits right above */
+    background: var(--ground);
+    color: var(--ink);
+  }
+
+  .about__story {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: center;
+    gap: clamp(2rem, 5vw, 5rem);
+    min-height: min(80svh, 52rem);
+  }
+
+  .about__c {
+    justify-self: center;
+    height: min(66svh, 38rem);
+    width: auto;
+    overflow: visible;
+  }
+  .about__c polygon {
+    fill: var(--ink);
+    fill-opacity: 1;
+    stroke: var(--ink);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+
+  .about__title {
+    margin: 0 0 0 -0.035em;
+    font-size: clamp(3rem, 7.4vw, 8rem);
+    font-stretch: 78%;
+    font-weight: 680;
+    line-height: 0.88;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+  }
+  .about__light {
+    display: block;
+    font-weight: 300;
+  }
+
+  .about__lede {
+    max-width: 36rem;
+    margin-top: clamp(1.5rem, 3vw, 2.5rem);
+    font-size: clamp(1.0625rem, 1.35vw, 1.3125rem);
+    line-height: 1.45;
+  }
+
+  .about__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 3rem;
+    margin: clamp(1.5rem, 3vw, 2.5rem) 0 0;
+  }
+  .about__facts dt {
+    color: var(--muted);
+  }
+  .about__facts dd {
+    margin: 0.25rem 0 0;
+    font-size: 1.0625rem;
+    font-weight: 500;
+  }
+
+  @media (max-width: 820px) {
+    .about__story {
+      grid-template-columns: 1fr;
+      min-height: 0;
+    }
+    .about__c {
+      justify-self: start;
+      height: min(46vw, 15rem);
+    }
+  }
+</style>

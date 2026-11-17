@@ -1,0 +1,220 @@
+---
+// The service groups live in src/lib/site.js, shared with the structured data for search engines.
+// Home: the four groups, each a link into the Services page. Services page (full): every service with a short description.
+import { groups } from '../lib/site.js';
+interface Props {
+  full?: boolean;
+}
+const { full = false } = Astro.props;
+const slug = (name: string) => name.toLowerCase();
+const Name = full ? 'h2' : 'h3'; // on the Services page the group names sit right under the page's h1
+---
+<section
+  class:list={['svc', { 'svc--full': full }]}
+  id={full ? undefined : 'services'}
+  aria-labelledby={full ? undefined : 'svc-title'}
+  aria-label={full ? 'Service groups' : undefined}
+>
+  {!full && (
+    <h2 class="svc__title" id="svc-title" data-svc-fade>
+      Services, grouped by the job they do for your company.
+    </h2>
+  )}
+
+  <ol class="svc__rows" role="list">
+    {groups.map((g) => (
+      <li class="svc__row" id={full ? slug(g.name) : undefined}>
+        <Name class="svc__name">
+          {full ? (
+            <span class="svc__mask"><span class="svc__word">{g.name}</span></span>
+          ) : (
+            <a class="svc__go" href={`/services/#${slug(g.name)}`}>
+              <span class="svc__mask"><span class="svc__word">{g.name}</span></span>
+            </a>
+          )}
+          <svg class="svc__light" viewBox="0 0 100 104" aria-hidden="true">
+            <polygon points="50,0 100,28.9 100,75.1 50,104 0,75.1 0,28.9" />
+          </svg>
+        </Name>
+        <div class="svc__detail" data-svc-fade>
+          <p class="svc__line">{g.line}</p>
+          {full && (
+            <dl class="svc__items">
+              {g.items.map(([name, desc]) => (
+                <div>
+                  <dt>{name}</dt>
+                  <dd>{desc}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </div>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+  const section = document.querySelector('.svc');
+
+  // The light: the group crossing the reading line is lit, like the light inside the logo's cut.
+  section.querySelectorAll('.svc__row').forEach((row) =>
+    ScrollTrigger.create({ trigger: row, start: 'top 62%', end: 'bottom 62%', toggleClass: 'is-lit' }),
+  );
+
+  // Reveals only when motion is welcome. States are set here, so the text is never hidden if this script fails.
+  gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
+    section.querySelectorAll('.svc__row').forEach((row) => {
+      gsap.fromTo(
+        row.querySelector('.svc__word'),
+        { yPercent: 110 },
+        { yPercent: 0, duration: 1, ease: 'expo.out', scrollTrigger: { trigger: row, start: 'top 88%', once: true } },
+      );
+    });
+    section.querySelectorAll('[data-svc-fade]').forEach((el) => {
+      gsap.fromTo(
+        el,
+        { autoAlpha: 0, y: 24 },
+        { autoAlpha: 1, y: 0, duration: 0.9, delay: 0.1, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 88%', once: true } },
+      );
+    });
+  });
+</script>
+
+<style>
+  .svc {
+    padding: clamp(5rem, 11vw, 10rem) var(--pad) clamp(4rem, 9vw, 8rem);
+    background: var(--ink);
+    color: var(--ground);
+  }
+
+  .svc__title {
+    max-width: 22ch;
+    margin: 0 0 clamp(3rem, 7vw, 6rem);
+    font-size: clamp(1.75rem, 3.4vw, 3.25rem);
+    font-weight: 300;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+
+  .svc__rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  .svc {
+    --rule: color-mix(in srgb, var(--ground) 18%, var(--ink));
+    --dim: color-mix(in srgb, var(--ground) 45%, var(--ink)); /* 3.8:1 on the charcoal: display text only */
+    --soft: color-mix(in srgb, var(--ground) 64%, var(--ink)); /* about 6:1: small text */
+  }
+
+  .svc__row {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: center;
+    gap: 1.5rem clamp(2rem, 4vw, 4rem);
+    padding: clamp(1.5rem, 3vw, 2.75rem) 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .svc__name {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.14em;
+    margin: 0 0 0 -0.04em; /* optical: pull the first stem onto the grid edge */
+    font-size: clamp(3.25rem, 11vw, 11rem);
+    font-stretch: 78%;
+    font-weight: 680;
+    line-height: 0.84;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    color: var(--dim);
+    transition: color 0.45s var(--ease-out);
+  }
+  .svc__mask {
+    display: block;
+    overflow: hidden; /* the mask each word rises through */
+    padding-top: 0.06em;
+  }
+  .svc__word {
+    display: block;
+  }
+
+  /* The lit hexagon: the same light as the button chip and the 3D mark. */
+  .svc__light {
+    flex: none;
+    width: 0.26em;
+    height: 0.27em;
+    margin-top: 0.1em;
+    fill: var(--accent);
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity 0.35s var(--ease-out), transform 0.45s var(--ease-out);
+  }
+
+  .svc__row:global(.is-lit) .svc__name,
+  .svc__row:has(.svc__go:hover, .svc__go:focus-visible) .svc__name {
+    color: var(--ground);
+  }
+  .svc__row:global(.is-lit) .svc__light,
+  .svc__row:has(.svc__go:hover, .svc__go:focus-visible) .svc__light {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .svc__go {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* The Services page: the page head above holds the title, and each row carries every service it groups. */
+  .svc--full {
+    padding-top: 0;
+  }
+  .svc--full .svc__row {
+    align-items: start;
+    scroll-margin-top: 5.5rem; /* clear of the nav bar when a link lands on a group */
+  }
+
+  .svc__line {
+    max-width: 30rem;
+    font-size: clamp(1.0625rem, 1.35vw, 1.3125rem);
+    line-height: 1.4;
+  }
+  .svc__items {
+    display: grid;
+    gap: 1.5rem;
+    margin: clamp(1.75rem, 3vw, 2.5rem) 0 0;
+  }
+  .svc__items dt {
+    font-size: 1.0625rem;
+    font-weight: 600;
+  }
+  .svc__items dd {
+    max-width: 32rem;
+    margin: 0.35rem 0 0;
+    color: var(--soft);
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  @media (max-width: 820px) {
+    .svc__row {
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+    .svc__name {
+      font-size: clamp(3.25rem, 18vw, 8rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .svc__light {
+      transform: none; /* the light still switches on, without growing */
+    }
+  }
+</style>

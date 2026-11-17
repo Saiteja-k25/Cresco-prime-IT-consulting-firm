@@ -1,0 +1,8 @@
+---
+import { C, P, P_HOLE, VIEWBOX, toPath } from '../lib/mark.js';
+const { class: className } = Astro.props;
+---
+<svg class={className} viewBox={VIEWBOX} fill="currentColor" aria-hidden="true" focusable="false">
+  <path d={toPath(C)} />
+  <path fill-rule="evenodd" d={toPath(P) + toPath(P_HOLE)} />
+</svg>

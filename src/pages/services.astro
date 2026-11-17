@@ -1,0 +1,14 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Services from '../components/Services.astro';
+import { serviceList, crumbs } from '../lib/site.js';
+---
+<Base
+  title="IT Services | Cresco Prime"
+  description="IT consulting, digital transformation, custom software, websites, apps, process automation and IT support from Cresco Prime in Frisco, Texas."
+  schema={[serviceList, crumbs('Services', '/services/')]}
+>
+  <PageHead title="Services" lede="Services, grouped by the job they do for your company." tone="ink" />
+  <Services full />
+</Base>

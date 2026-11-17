@@ -1,0 +1,23 @@
+---
+import Base from '../layouts/Base.astro';
+import Intro from '../components/Intro.astro';
+import Hero from '../components/Hero.astro';
+import Services from '../components/Services.astro';
+import AboutPreview from '../components/AboutPreview.astro';
+import Principles from '../components/Principles.astro';
+---
+<Base
+  title="Cresco Prime | IT Services and Consulting"
+  description="Cresco Prime plans, builds and runs software, websites and IT systems for growing companies. Based in Frisco, Texas."
+  intro
+>
+  <Intro slot="before" />
+  <Hero />
+  <Services />
+  <AboutPreview />
+  <Principles />
+</Base>
+
+<script>
+  import '../scripts/entrance.js';
+</script>

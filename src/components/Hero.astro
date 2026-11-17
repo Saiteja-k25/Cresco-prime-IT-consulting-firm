@@ -1,0 +1,148 @@
+---
+import Mark from './Mark.astro';
+// No buttons here (client's call): the menu and the footer carry the ways to get in touch.
+---
+<section class="hero">
+
+  <!-- The flat mark is the fallback; the 3D mark draws into the same stage when it loads. -->
+  <div class="hero__stage" data-mark aria-hidden="true">
+    <Mark class="hero__flat" />
+  </div>
+
+  <div class="hero__body">
+    <!-- Four lines on desktop, two on phones. Light and heavy weights echo the wordmark's CRESCO / PRIME.
+         The {' '} keep real spaces in the text: Astro strips whitespace between tags. -->
+    <h1 class="hero__title">
+      <span class="pair">
+        <span class="word word--light"><span class="word__in">Innovating</span></span>{' '}
+        <span class="word"><span class="word__in">today.</span></span>
+      </span>{' '}
+      <span class="pair">
+        <span class="word word--light"><span class="word__in">Empowering</span></span>{' '}
+        <span class="word"><span class="word__in">tomorrow.</span></span>
+      </span>
+    </h1>
+    <p class="hero__lede" data-rise>
+      We plan, build and run the software and IT systems your company depends on.
+      If you have outgrown your tools, we replace them with ones that fit.
+    </p>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    min-height: 100svh;
+    padding: calc(var(--pad) + 5rem) var(--pad) var(--pad); /* top: clears the floating nav bar */
+    overflow: clip;
+    background: var(--ground);
+  }
+
+
+  /* Desktop: the mark owns the right half. */
+  .hero__stage {
+    /* Share of the stage's height the mark fills. The flat mark and the 3D camera both read it. */
+    --mark-fill: 0.75;
+    position: absolute;
+    z-index: 0;
+    inset: 0 -3vw 0 auto; /* keeps the mark about a gutter inside the right edge */
+    margin-block: auto; /* centred without a transform: the entrance animates this element's transform */
+    height: min(100svh, 66vw);
+    aspect-ratio: 1;
+    pointer-events: none;
+  }
+  .hero__stage :global(.hero__flat),
+  .hero__stage :global(canvas) {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+  }
+  .hero__stage :global(.hero__flat) {
+    height: calc(var(--mark-fill) * 100%);
+    width: auto;
+    transition: opacity 0.6s;
+  }
+  .hero__stage :global(canvas) {
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.6s;
+  }
+  .hero__stage:global(.is-3d) :global(.hero__flat) {
+    opacity: 0;
+  }
+  .hero__stage:global(.is-3d) :global(canvas) {
+    opacity: 1;
+  }
+
+  .hero__body {
+    position: relative;
+    z-index: 1;
+    align-self: end;
+    max-width: 52vw;
+  }
+
+  /* Sized by whichever is tighter, width or height, so four lines never push the text off a short screen. */
+  .hero__title {
+    margin-left: -0.035em; /* optical: pull the first stems onto the grid edge */
+    font-size: min(9.4vw, 12.6svh); /* leaves air between the top bar and the first line on short screens */
+    font-stretch: 78%;
+    font-weight: 680;
+    line-height: 0.84;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+  }
+  .pair {
+    display: block;
+    white-space: nowrap;
+  }
+  .word {
+    display: block;
+    overflow: hidden; /* the mask each word rises through */
+    padding-top: 0.06em; /* room for the cap tops inside the mask */
+  }
+  .word--light {
+    font-weight: 300;
+  }
+  .word__in {
+    display: block;
+  }
+
+  .hero__lede {
+    max-width: 31rem;
+    margin-top: clamp(1.25rem, 2.2vw, 2rem);
+    font-size: clamp(1rem, 1.2vw, 1.1875rem);
+    line-height: 1.45;
+  }
+
+  /* Phone and narrow tablet: mark above, type below, everything in the flow. */
+  @media (max-width: 820px) {
+    .hero {
+      grid-template-rows: 1fr auto;
+      row-gap: 0.75rem;
+    }
+    .hero__stage {
+      --mark-fill: 0.84; /* leaves room for the turned block inside its square canvas */
+      position: relative;
+      inset: auto;
+      margin-block: 0;
+      justify-self: center;
+      align-self: center;
+      height: min(35svh, 86vw);
+    }
+    .hero__body {
+      max-width: none;
+    }
+    /* Two lines: one sentence each. */
+    .hero__title {
+      font-size: 9.7vw;
+      line-height: 0.9;
+    }
+    .word {
+      display: inline-block;
+      vertical-align: top;
+    }
+  }
+</style>

@@ -1,0 +1,47 @@
+---
+import Base from '../layouts/Base.astro';
+
+const arrow = 'M3.5 12H19M13.1 8l6.9 4-6.9 4';
+---
+<Base title="Page not found | Cresco Prime" description="This page does not exist on the Cresco Prime site.">
+  <section class="lost">
+    <h1 class="lost__title"><span class="lost__light">This page</span> doesn&rsquo;t exist.</h1>
+    <p class="lost__lede">The link may be old, or the address mistyped.</p>
+    <a class="link link--back" href="/">
+      <span class="link__text">Back to the home page</span>
+      <svg class="link__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d={arrow} /></svg>
+    </a>
+  </section>
+</Base>
+
+<style>
+  .lost {
+    display: grid;
+    align-content: center;
+    justify-items: start;
+    min-height: 100svh;
+    padding: var(--pad);
+    background: var(--ground);
+    color: var(--ink);
+  }
+  .lost__title {
+    margin: 0 0 0 -0.035em;
+    font-size: clamp(3rem, 8vw, 8.5rem);
+    font-stretch: 78%;
+    font-weight: 680;
+    line-height: 0.86;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+  }
+  .lost__light {
+    display: block;
+    font-weight: 300;
+  }
+  .lost__lede {
+    margin: clamp(1.5rem, 3vw, 2.5rem) 0 1rem;
+    font-size: clamp(1.125rem, 1.5vw, 1.375rem);
+  }
+  .link--back .link__arrow {
+    rotate: 180deg; /* points back */
+  }
+</style>

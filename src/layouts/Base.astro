@@ -1,0 +1,89 @@
+---
+// Shared page shell: head, fonts, the page-transition panel and its script.
+import '@fontsource-variable/mona-sans/wdth.css';
+import '@fontsource-variable/geist-mono/wght.css';
+import '../styles/global.css';
+import monaWoff2 from '@fontsource-variable/mona-sans/files/mona-sans-latin-wdth-normal.woff2?url';
+import { C, P, P_HOLE, VIEWBOX, toPath } from '../lib/mark.js';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { SITE, org, website } from '../lib/site.js';
+
+interface Props {
+  title: string;
+  description: string;
+  intro?: boolean; // the first-visit entrance (home page only)
+  noindex?: boolean; // drafts stay out of search results
+  schema?: object[]; // the page's own structured data, added to the company's
+}
+const { title, description, intro = false, noindex = false, schema = [] } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+// What search engines read about the company on every page, plus what the page adds.
+const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': [org, website, ...schema] });
+const shareImage = `${SITE}/og.png`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#242424" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preload" as="font" type="font/woff2" href={monaWoff2} crossorigin />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Cresco Prime" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={shareImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Cresco Prime: IT services and consulting, Frisco, Texas" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={shareImage} />
+    <script type="application/ld+json" set:html={jsonLd} />
+    <script is:inline define:vars={{ intro }}>
+      // Before first paint, so neither the entrance nor an incoming page transition ever flashes.
+      var root = document.documentElement;
+      var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var arriving = false;
+      try { arriving = sessionStorage.getItem('wipe') === '1'; } catch (e) {}
+      if (arriving && !reduce) root.classList.add('wipe-in'); // arrived through a page transition: the panel starts closed
+      if (intro && !arriving && !reduce) {
+        root.classList.add('has-intro');
+        // If the entrance script has not taken over after 6s (failed download), show the page anyway.
+        setTimeout(function () {
+          if (!root.classList.contains('intro-run')) root.classList.remove('has-intro');
+        }, 6000);
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <slot name="before" />
+    <Nav />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer />
+    <!-- Page transition: the panel rises over the page while the C and the P of the mark lock together and the
+         light runs down the cut between them; the page changes; the panel lifts away. -->
+    <div class="wipe" aria-hidden="true">
+      <svg class="wipe__mark" viewBox={VIEWBOX}>
+        <path class="wipe__c" d={toPath(C)} />
+        <path class="wipe__p" fill-rule="evenodd" d={toPath(P) + toPath(P_HOLE)} />
+        <rect class="wipe__seam" x="-6" y="11.8" width="12" height="570.4" />
+      </svg>
+    </div>
+    <script>
+      import '../scripts/transition.js';
+    </script>
+  </body>
+</html>

@@ -1,0 +1,77 @@
+---
+// The opening of an inner page: the page name set huge in the display style, one line beside it.
+// The name rises through its mask as the transition panel lifts away.
+interface Props {
+  title: string;
+  lede: string;
+  tone?: 'paper' | 'ink';
+}
+const { title, lede, tone = 'paper' } = Astro.props;
+---
+<header class:list={['ph', `ph--${tone}`]}>
+  <h1 class="ph__title"><span class="ph__mask"><span class="ph__word">{title}</span></span></h1>
+  <p class="ph__lede">{lede}</p>
+</header>
+
+<script>
+  import { gsap } from 'gsap';
+
+  // States are set here, so the title is never hidden if this script fails. Without motion it simply stands.
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const delay = document.documentElement.classList.contains('wipe-in') ? 0.4 : 0.1; // wait for the panel to lift
+    gsap.fromTo('.ph__word', { yPercent: 105 }, { yPercent: 0, duration: 1.1, ease: 'expo.out', delay });
+    gsap.fromTo('.ph__lede', { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.9, ease: 'expo.out', delay: delay + 0.2 });
+  }
+</script>
+
+<style>
+  .ph {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
+    align-items: end;
+    gap: 1.5rem clamp(2rem, 5vw, 5rem);
+    padding: calc(var(--pad) + 8.5rem) var(--pad) clamp(3.5rem, 7vw, 6rem);
+  }
+  .ph--paper {
+    background: var(--ground);
+    color: var(--ink);
+  }
+  .ph--ink {
+    background: var(--ink);
+    color: var(--ground);
+  }
+
+  .ph__title {
+    margin: 0 0 0 -0.04em; /* optical: pull the first stem onto the grid edge */
+    font-size: min(17vw, 28svh);
+    font-stretch: 78%;
+    font-weight: 680;
+    line-height: 0.84;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+  }
+  .ph__mask {
+    display: block;
+    overflow: hidden; /* the mask the name rises through */
+    padding-top: 0.06em;
+  }
+  .ph__word {
+    display: block;
+  }
+
+  .ph__lede {
+    margin: 0 0 0.4em;
+    font-size: clamp(1.125rem, 1.6vw, 1.5rem);
+    line-height: 1.35;
+  }
+
+  @media (max-width: 820px) {
+    .ph {
+      grid-template-columns: 1fr;
+      padding-top: calc(var(--pad) + 7rem);
+    }
+    .ph__title {
+      font-size: min(23vw, 24svh);
+    }
+  }
+</style>

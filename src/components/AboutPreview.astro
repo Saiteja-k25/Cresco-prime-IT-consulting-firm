@@ -1,0 +1,56 @@
+---
+// Home page: who we are in two sentences, and the way into the About page. Draft copy for the client to approve.
+const arrow = 'M3.5 12H19M13.1 8l6.9 4-6.9 4';
+---
+<section class="ap" aria-labelledby="ap-title">
+  <h2 class="ap__title" id="ap-title">
+    <span class="ap__light">Cresco means</span> &ldquo;I&nbsp;grow.&rdquo;
+  </h2>
+  <div class="ap__text">
+    <p class="ap__lede">
+      We are an IT services and consulting firm in Frisco, Texas, founded in 2026 by Kalyan Boddula. We replace the
+      technology that holds a growing company back, then stay on to keep it running.
+    </p>
+    <a class="link link--next" href="/about/">
+      <span class="link__text">More about Cresco Prime</span>
+      <svg class="link__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d={arrow} /></svg>
+    </a>
+  </div>
+</section>
+
+<style>
+  .ap {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: end;
+    gap: 2rem clamp(2rem, 5vw, 5rem);
+    padding: clamp(5rem, 11vw, 10rem) var(--pad);
+    background: var(--ground);
+    color: var(--ink);
+  }
+  .ap__title {
+    margin: 0 0 0 -0.035em;
+    font-size: clamp(3rem, 7.4vw, 8rem);
+    font-stretch: 78%;
+    font-weight: 680;
+    line-height: 0.88;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+  }
+  .ap__light {
+    display: block;
+    font-weight: 300;
+  }
+  .ap__lede {
+    max-width: 32rem;
+    margin: 0 0 1.25rem;
+    font-size: clamp(1.0625rem, 1.35vw, 1.3125rem);
+    line-height: 1.45;
+  }
+
+  @media (max-width: 820px) {
+    .ap {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

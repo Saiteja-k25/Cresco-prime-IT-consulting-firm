@@ -1,0 +1,304 @@
+:root {
+  /* Two colours from the logo, one accent. Muted and line are mixes of the first two, not new hues. */
+  --ink: #242424;
+  --ground: #ecede8;
+  --accent: #c6f432;
+  --muted: color-mix(in srgb, var(--ink) 68%, var(--ground));
+
+  --font-display: 'Mona Sans Variable', 'Arial Narrow', Arial, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+
+  --pad: clamp(1.25rem, 2.8vw, 2.5rem);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1); /* a strong ease-out for anything the pointer triggers */
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ink); /* the curtain colour behind the hero during the entrance */
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+p {
+  margin: 0;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
+.skip {
+  position: absolute;
+  left: var(--pad);
+  top: -4rem;
+  z-index: 100;
+  padding: 0.6rem 0.9rem;
+  background: var(--accent);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+.skip:focus {
+  top: var(--pad);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Primary action: a dark pill with the mark's hexagon as the light inside it.
+   The lime hexagon is the visible part of a flood layer. On hover, focus or tap it opens over the whole pill,
+   the same move as the page entrance. --on drives every part. */
+.cta {
+  --on: 0;
+  --t: 0.22s; /* leaving is quicker than entering */
+  --grow: 8.5; /* how far the hexagon opens: enough to cover the pill from the chip */
+  --k: calc(1 + var(--on) * var(--grow));
+  --w: calc(1.444rem * var(--k)); /* the mark's hexagon: half width, half height, half its straight side */
+  --h: calc(1.5rem * var(--k));
+  --s: calc(0.666rem * var(--k));
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  height: 4rem;
+  padding: 0 0.5rem 0 1.75rem;
+  overflow: hidden;
+  border-radius: 999px;
+  color: var(--ground);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 0.16s var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+.cta:focus-visible {
+  --on: 1;
+  --t: 0.35s;
+  outline-color: var(--ink);
+}
+@media (hover: hover) and (pointer: fine) {
+  .cta:hover {
+    --on: 1;
+    --t: 0.35s;
+  }
+}
+.cta:active {
+  --on: 1;
+  --t: 0.2s;
+  transform: scale(0.97);
+}
+@media (max-width: 480px) {
+  .cta {
+    --grow: 19; /* full-width on phones: the light has further to travel */
+  }
+}
+/* The dark body sits 1px inside the pill so the light covers it fully, with no dark fringe on the curve. */
+.cta::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: -2;
+  border-radius: inherit;
+  background: var(--ink);
+}
+/* The light and a copy of the label in the other colour share one hexagonal clip,
+   so the words change colour exactly where the edge of the light passes. */
+.cta::before,
+.cta__label::after {
+  clip-path: polygon(
+    var(--cx) calc(50% - var(--h)),
+    calc(var(--cx) + var(--w)) calc(50% - var(--s)),
+    calc(var(--cx) + var(--w)) calc(50% + var(--s)),
+    var(--cx) calc(50% + var(--h)),
+    calc(var(--cx) - var(--w)) calc(50% + var(--s)),
+    calc(var(--cx) - var(--w)) calc(50% - var(--s))
+  );
+  transition: clip-path var(--t) var(--ease-out);
+}
+.cta::before {
+  --cx: calc(100% - 1.944rem); /* the chip's centre */
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--accent);
+}
+.cta__label {
+  position: relative;
+  flex: 1; /* keeps the chip exactly one gap away at any width, which the label copy's clip relies on */
+}
+.cta__label::after {
+  --cx: calc(100% + 2.444rem); /* the same chip centre, measured from the label */
+  content: attr(data-label);
+  content: attr(data-label) / ''; /* a visual copy: keep it out of the accessible name */
+  position: absolute;
+  inset: -1.5rem 0;
+  display: grid;
+  align-items: center;
+  color: var(--ink);
+}
+.cta__chip {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.888rem;
+  height: 3rem;
+  color: var(--ink);
+}
+/* Once the pill is lit, the chip becomes a dark hexagon with a lit arrow. */
+.cta__over {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: var(--accent);
+  clip-path: polygon(50% 0, 100% 27.8%, 100% 72.2%, 50% 100%, 0 72.2%, 0 27.8%);
+  opacity: var(--on);
+  transition: opacity var(--t) var(--ease-out);
+}
+.cta__arrow,
+.link__arrow {
+  width: 1.375rem;
+  height: 1.375rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: square;
+}
+.cta__arrow {
+  transform: translateX(calc(var(--on) * 2px));
+  transition: transform var(--t) var(--ease-out);
+}
+
+/* Secondary action: a quiet link. The line draws in, the arrow points where it leads. */
+.link {
+  --on: 0;
+  --t: 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  color: var(--ink);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.link:focus-visible {
+  border-radius: 999px; /* the ring matches the pill beside it */
+  outline-offset: 8px;
+}
+.link:focus-visible,
+.link:active {
+  --on: 1;
+  --t: 0.3s;
+}
+@media (hover: hover) and (pointer: fine) {
+  .link:hover {
+    --on: 1;
+    --t: 0.3s;
+  }
+}
+.link__text {
+  position: relative;
+  padding-bottom: 0.3em;
+}
+.link__text::before,
+.link__text::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background: currentColor;
+}
+.link__text::before {
+  opacity: 0.28;
+}
+.link__text::after {
+  transform: scaleX(var(--on));
+  transform-origin: left;
+  transition: transform var(--t) var(--ease-out);
+}
+.link__arrow {
+  rotate: 90deg; /* points down: the link leads further down the page */
+  transform: translateX(calc(var(--on) * 4px));
+  transition: transform var(--t) var(--ease-out);
+}
+.link--out .link__arrow {
+  rotate: -45deg; /* points up and out: the link leaves the site */
+}
+.link--next .link__arrow {
+  rotate: 0deg; /* points ahead: the link leads to another page */
+}
+
+/* Page transition panel (transition.js). Parked below the screen; closed from first paint when a page arrives
+   through a transition (html.wipe-in, set in the head). */
+.wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  transform: translateY(100%);
+  visibility: hidden; /* parked: never painted, so full-page captures and prints never show it */
+  pointer-events: none;
+}
+html.wipe-in .wipe {
+  transform: none;
+  visibility: visible;
+}
+.wipe__mark {
+  width: auto;
+  height: clamp(5rem, 15svh, 8.5rem);
+  overflow: visible; /* the C and the P start outside the mark's box */
+  fill: var(--ground);
+}
+.wipe__seam {
+  fill: var(--accent); /* the light again, as in the mark's cut and the button chip */
+}
+main:focus {
+  outline: none; /* main takes focus only as the skip link's target */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

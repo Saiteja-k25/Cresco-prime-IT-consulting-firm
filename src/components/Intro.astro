@@ -1,0 +1,67 @@
+---
+// First-load curtain: a faint hexagon socket and a counter. The hero rises into the socket as a window.
+import { HEX, VIEWBOX } from '../lib/mark.js';
+const hexagon = [
+  [0, 0], [HEX.w, HEX.shoulder], [HEX.w, HEX.h - HEX.shoulder],
+  [0, HEX.h], [-HEX.w, HEX.h - HEX.shoulder], [-HEX.w, HEX.shoulder],
+].map((p) => p.join(',')).join(' ');
+---
+<div class="intro" aria-hidden="true">
+  <svg class="intro__hex" viewBox={VIEWBOX} data-intro-hex>
+    <polygon points={hexagon} pathLength="1" />
+  </svg>
+  <span class="intro__count mono" data-intro-count>000</span>
+  <span class="intro__name mono">Cresco Prime</span>
+</div>
+
+<style>
+  .intro {
+    display: none;
+  }
+  :global(html.has-intro) {
+    overflow: hidden;
+  }
+  :global(html.has-intro) :global(.hero) {
+    visibility: hidden;
+  }
+  :global(html.has-intro) .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: block;
+    color: var(--ground);
+    pointer-events: none;
+  }
+
+  /* Same proportions as the mark's hexagon; the script reads this size to place the window. */
+  .intro__hex {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    height: min(66svh, 80vw);
+    overflow: visible;
+  }
+  .intro__hex polygon {
+    fill: none;
+    stroke: currentColor;
+    stroke-opacity: 0.16;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  .intro__count,
+  .intro__name {
+    position: absolute;
+    bottom: var(--pad);
+    opacity: 0.6;
+  }
+  .intro__count {
+    left: var(--pad);
+    font-variant-numeric: tabular-nums;
+  }
+  .intro__name {
+    right: var(--pad);
+  }
+</style>
