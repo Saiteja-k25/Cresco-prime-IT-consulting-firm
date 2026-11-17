@@ -220,3 +220,13 @@ Never text on the light ground.
   records up to 7 years; email on Microsoft 365. US$100 cap on liability for the website only (for the lawyer to check).
 - The "Draft for review" banner was removed and both pages opened to search engines (in the sitemap, no noindex)
   at the client's request (2026-11-17).
+
+## Deployment (2026-11-17)
+
+- GitHub: `Saiteja-k25/Cresco-prime-IT-consulting-firm`, branch `main`. Cloudflare Pages project `cresco-prime`
+  (build `npm run build`, output `dist`, Node from `.node-version`), live at https://cresco-prime.pages.dev and
+  rebuilt on every push to `main`.
+- crescoprime.com still points to the old site on Netlify (Netlify DNS). Its Microsoft 365 email records must move
+  with the DNS: MX `crescoprime-com.mail.protection.outlook.com` (priority 0), TXT
+  `v=spf1 include:spf.protection.outlook.com -all`, the LinkedIn verification TXT, CNAME `autodiscover` to
+  `autodiscover.outlook.com`. No DKIM or DMARC records exist yet.
