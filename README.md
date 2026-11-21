@@ -49,14 +49,16 @@ that load only where they are needed.
 
 ## Features
 
-- **Six pages:** Home, Services, About, Founder, Privacy policy and Terms of service, plus a custom 404 page.
+- **Pages:** Home, Services, About (with the founder), Careers with a page per open role, Privacy policy and Terms of
+  service, plus a custom 404 page.
 - **Motion:** GSAP timelines and ScrollTrigger, Lenis smooth scrolling, a lazy-loaded Three.js logo that pauses off
   screen and falls back to a flat SVG on software renderers, data saver or reduced motion.
 - **Navigation:** a floating glass bar and a full-screen menu; each menu link opens a page with only its own section.
 - **Accessibility:** semantic landmarks and headings, a skip link, visible focus, keyboard-only menu control
   (Escape closes it), `inert` page content behind the open menu, and full `prefers-reduced-motion` support.
 - **Search engines:** canonical URLs, Open Graph and Twitter cards with a share image, schema.org JSON-LD
-  (ProfessionalService, WebSite, Service list, Person, breadcrumbs), `sitemap.xml` and `robots.txt`.
+  (ProfessionalService, WebSite, Service list, Person, job postings, breadcrumbs), a generated `sitemap.xml` and
+  `robots.txt`.
 - **Privacy:** no cookies, analytics, trackers or forms.
 
 ## Getting started
@@ -73,14 +75,16 @@ npm run preview    # serve the production build locally
 ## Project structure
 
 ```
-public/                 Static files served as-is: icons, share image, logo, sitemap, robots.txt, photos
+public/                 Static files served as-is: icons, share image, logo, robots.txt, _redirects, photos
 src/
   components/           Page sections (Hero, Services, About, Founder, Principles), Nav, Footer, PageHead, Legal
   layouts/Base.astro    Shared page shell: head tags, structured data, fonts, nav, footer, transition panel
   lib/
     mark.js             The logo geometry, shared by the SVG, the 3D logo and the transition
     site.js             Company facts and the service list, shared by the pages and the structured data
-  pages/                One file per route: index, services, about, founder, privacy, terms, 404
+    jobs.js             The open roles: add one to open it, remove one to close it
+  pages/                One file per route: index, services, about, careers (list and [slug] role pages), privacy,
+                        terms, 404, and sitemap.xml.js
   scripts/              Entrance, page transitions, smooth scrolling and the 3D logo
   styles/global.css     Design tokens (colours, spacing, easing), buttons and links
 DESIGN.md               Design record: concept, palette, type, motion and every section's decisions
@@ -91,6 +95,8 @@ DESIGN.md               Design record: concept, palette, type, motion and every 
 | What | Where |
 | --- | --- |
 | Services and their descriptions | `src/lib/site.js` (`groups`) |
+| Open roles (and their location and type for Google for Jobs) | `src/lib/jobs.js` |
+| The founder's message | `src/components/Founder.astro` |
 | Company details, phone, social profiles for search engines | `src/lib/site.js` (`org`, `person`) |
 | Contact email, LinkedIn, Instagram, WhatsApp links | top of `src/components/Footer.astro` |
 | Menu links and their side notes | top of `src/components/Nav.astro` |
@@ -98,7 +104,7 @@ DESIGN.md               Design record: concept, palette, type, motion and every 
 | Privacy policy and terms | `src/pages/privacy.astro`, `src/pages/terms.astro` |
 | Colours and spacing | `:root` in `src/styles/global.css` |
 
-When you add or remove a page, update `public/sitemap.xml` as well.
+When you add or remove a fixed page, add it to the list in `src/pages/sitemap.xml.js`; roles are added automatically.
 
 ## Deployment (Cloudflare Pages)
 
@@ -111,6 +117,69 @@ When you add or remove a page, update `public/sitemap.xml` as well.
 
 Once the repository is connected, every push to `main` builds and publishes the site. Pages are generated as folders, so URLs end in a slash
 (`/services/`), which is also the canonical form used in links and in the sitemap.
+
+## Job applications
+
+Each role page has an application form. It posts to a Cloudflare Pages Function (`functions/api/apply.js`) that checks
+the answers and the CV (PDF or Word, up to 3 MB), verifies [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/),
+and sends two emails through [Resend](https://resend.com) from `apply@careers.crescoprime.com`: the application with
+the CV attached to hr@crescoprime.com (reply goes to the applicant), and a confirmation to the applicant (reply goes
+to hr@). Nothing is stored on the website. Until the settings below exist, the form tells applicants to email their
+CV instead. Sending through Microsoft 365 is built in as an alternative (see the end of this section).
+
+### 1. Cloudflare Turnstile
+
+Cloudflare dashboard > Turnstile > widget "Cresco Prime careers" (Managed), hostnames `cresco-prime.pages.dev`,
+`crescoprime.com` and `www.crescoprime.com`. Its site key and secret key go into the Pages settings below.
+
+### 2. Resend
+
+1. Create a Resend account.
+2. Domains > **Add domain**: `careers.crescoprime.com`. A subdomain keeps form email apart from the company's own
+   Microsoft 365 email reputation, as Resend recommends.
+3. Add the DNS records Resend lists (a DKIM TXT record and the `send` and `rsend` CNAME records, all under
+   `careers.crescoprime.com`) where crescoprime.com's DNS is managed. They do not touch the root domain's MX or SPF
+   records, so Microsoft 365 email is unaffected. Then click **Verify** in Resend.
+4. API Keys > **Create API key**: permission **Sending access**, domain `careers.crescoprime.com`. Copy it once into
+   the Pages settings below as `RESEND_API_KEY`.
+
+### 3. Cloudflare Pages settings
+
+Workers & Pages > cresco-prime > Settings > Variables and secrets (Production), then redeploy:
+
+| Name | Type | Value |
+| --- | --- | --- |
+| `PUBLIC_TURNSTILE_SITE_KEY` | Text | Turnstile site key (read at build time) |
+| `TURNSTILE_SECRET_KEY` | Secret | Turnstile secret key |
+| `HR_MAILBOX` | Text | `hr@crescoprime.com` |
+| `RESEND_API_KEY` | Secret | Resend API key |
+| `MAIL_FROM` | Text | Optional. Defaults to `Cresco Prime Careers <apply@careers.crescoprime.com>` |
+
+`MAIL_DRY_RUN=1` is for local testing only: the function then returns the two emails instead of sending them.
+Never set it in Cloudflare.
+
+### Alternative: Microsoft 365
+
+If `RESEND_API_KEY` is absent and the three `MS_` settings exist, the function sends through Microsoft Graph as
+`HR_MAILBOX` instead. A Microsoft 365 admin sets it up with
+[RBAC for Applications](https://learn.microsoft.com/exchange/permissions-exo/application-rbac), so the app can send as
+hr@ and no other mailbox:
+
+1. Microsoft Entra admin center > App registrations > **New registration** "Cresco Prime website", single tenant.
+   Note the **Directory (tenant) ID** and **Application (client) ID**.
+2. Certificates & secrets > **New client secret**; copy its **Value**. Do **not** add the Graph `Mail.Send`
+   permission in Entra: that would allow sending as every mailbox.
+3. Enterprise applications > "Cresco Prime website": note its **Application ID** and **Object ID**.
+4. In Exchange Online PowerShell (`Connect-ExchangeOnline` as an Exchange administrator):
+
+   ```powershell
+   New-ServicePrincipal -AppId <Application ID> -ObjectId <Object ID> -DisplayName "Cresco Prime website"
+   New-ManagementScope -Name "Cresco Prime website mailbox" -RecipientRestrictionFilter "PrimarySmtpAddress -eq 'hr@crescoprime.com'"
+   New-ManagementRoleAssignment -App <Object ID> -Role "Application Mail.Send" -CustomResourceScope "Cresco Prime website mailbox"
+   Test-ServicePrincipalAuthorization -Identity <Object ID> -Resource hr@crescoprime.com
+   ```
+
+5. Pages settings: `MS_TENANT_ID` and `MS_CLIENT_ID` (Text), `MS_CLIENT_SECRET` (Secret); remove `RESEND_API_KEY`.
 
 ## Browser support
 

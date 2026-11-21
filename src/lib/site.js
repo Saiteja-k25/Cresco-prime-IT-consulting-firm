@@ -43,7 +43,7 @@ const instagram = 'https://www.instagram.com/crescoprime/';
 
 // schema.org nodes. One id per thing, so pages can point at each other's nodes.
 export const ORG_ID = `${SITE}/#org`;
-export const PERSON_ID = `${SITE}/founder/#person`;
+export const PERSON_ID = `${SITE}/about/#founder`;
 
 export const org = {
   '@type': 'ProfessionalService',
@@ -81,7 +81,7 @@ export const person = {
   name: 'Kalyan Boddula',
   jobTitle: 'Founder, Director and CEO',
   worksFor: { '@id': ORG_ID },
-  url: `${SITE}/founder/`,
+  url: `${SITE}/about/#founder`,
   image: `${SITE}/images/kalyan-boddula.webp`,
   knowsAbout: ['Microsoft Azure', 'Identity and access management', 'Single sign-on', 'Multi-factor authentication'],
   sameAs: ['https://www.linkedin.com/in/kalyan-boddula-9abb43396/'],
@@ -98,11 +98,32 @@ export const serviceList = {
   })),
 };
 
-// Home > page, for the search result's breadcrumb line.
-export const crumbs = (name, path) => ({
+// Home > page (> subpage), for the search result's breadcrumb line. Pass [name, path] pairs.
+export const crumbs = (...trail) => ({
   '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
-    { '@type': 'ListItem', position: 2, name, item: `${SITE}${path}` },
-  ],
+  itemListElement: [['Home', '/'], ...trail].map(([name, path], i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name,
+    item: `${SITE}${path}`,
+  })),
+});
+
+// A role for Google for Jobs: fully remote (TELECOMMUTE), open to applicants in the listed countries.
+export const jobPosting = (job, posted, remote) => ({
+  '@type': 'JobPosting',
+  title: job.title,
+  description: [
+    `<p>${job.overview}</p>`,
+    `<p>${remote.label}.</p>`,
+    `<p>Key responsibilities:</p><ul>${job.responsibilities.map((x) => `<li>${x}</li>`).join('')}</ul>`,
+    `<p>Required skills:</p><ul>${job.skills.map((x) => `<li>${x}</li>`).join('')}</ul>`,
+  ].join(''),
+  datePosted: posted,
+  employmentType: job.type,
+  jobLocationType: 'TELECOMMUTE',
+  applicantLocationRequirements: remote.countries.map((name) => ({ '@type': 'Country', name })),
+  hiringOrganization: { '@type': 'Organization', name: 'Cresco Prime', sameAs: `${SITE}/`, logo: `${SITE}/logo.png` },
+  directApply: true,
+  url: `${SITE}/careers/${job.slug}/`,
 });

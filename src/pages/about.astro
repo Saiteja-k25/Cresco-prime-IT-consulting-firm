@@ -2,15 +2,17 @@
 import Base from '../layouts/Base.astro';
 import PageHead from '../components/PageHead.astro';
 import About from '../components/About.astro';
-import { SITE, ORG_ID, crumbs } from '../lib/site.js';
+import Founder from '../components/Founder.astro';
+import { SITE, ORG_ID, PERSON_ID, person, crumbs } from '../lib/site.js';
 
-const page = { '@type': 'AboutPage', url: `${SITE}/about/`, name: 'About Cresco Prime', about: { '@id': ORG_ID } };
+const page = { '@type': 'AboutPage', url: `${SITE}/about/`, name: 'About Cresco Prime', about: { '@id': ORG_ID }, mentions: { '@id': PERSON_ID } };
 ---
 <Base
   title="About | Cresco Prime"
-  description="Cresco Prime is an IT services and consulting firm in Frisco, Texas, founded in 2026. We replace the technology that holds growing companies back and keep it running."
-  schema={[page, crumbs('About', '/about/')]}
+  description="Cresco Prime is an IT services and consulting firm in Frisco, Texas, founded in 2026 by Kalyan Boddula, its founder, director and CEO."
+  schema={[page, person, crumbs(['About', '/about/'])]}
 >
   <PageHead title="About" lede="IT services and consulting from Frisco, Texas, since 2026." />
   <About />
+  <Founder />
 </Base>

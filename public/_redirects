@@ -1,0 +1,3 @@
+# Cloudflare Pages redirects. The founder now lives on the About page (2026-11-19).
+/founder /about/#founder 301
+/founder/ /about/#founder 301

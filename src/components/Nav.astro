@@ -6,11 +6,14 @@ import Mark from './Mark.astro';
 const links = [
   { href: '/services/', label: 'Services', meta: 'What we do', note: 'Advise, build, automate, run' },
   { href: '/about/', label: 'About', meta: 'Since 2026', note: 'Cresco means “I grow”' },
-  { href: '/founder/', label: 'Founder', meta: 'Kalyan Boddula', note: 'Founder, Director and CEO' },
+  { href: '/careers/', label: 'Careers', meta: 'Open roles', note: 'Identity, cloud, SAP, networks' },
   { href: '#contact', label: 'Contact', meta: 'Email us', note: 'hr@crescoprime.com' },
 ];
 const path = (p: string) => p.replace(/\/$/, '') || '/'; // "/about/" and "/about" are the same page
-const current = (href: string) => (path(href) === path(Astro.url.pathname) ? 'page' : undefined);
+// The page's own link is marked current, and Careers stays marked on a role's page.
+const here = path(Astro.url.pathname);
+const current = (href: string) =>
+  href.startsWith('/') && (path(href) === here || here.startsWith(path(href) + '/')) ? 'page' : undefined;
 ---
 <header class="nav">
   <div class="nav__bar">

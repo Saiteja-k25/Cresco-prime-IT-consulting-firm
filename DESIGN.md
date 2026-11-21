@@ -157,15 +157,49 @@ Never text on the light ground.
 - `/services/`: page head "SERVICES" on charcoal with "Services, grouped by the job they do for your company.", then
   the four groups, each listing its services with a one-line description (draft copy for the client to approve).
   Groups carry ids (`#advise`, `#build`, `#automate`, `#run`).
-- `/about/`: page head "ABOUT" on paper with "IT services and consulting from Frisco, Texas, since 2026.", then only
-  the story with the C (traced once on a clock as it comes into view, then filled).
-- `/founder/` (`src/components/Founder.astro`): page head "FOUNDER" with "The person who started Cresco Prime in
-  2026.", then only Kalyan: name, role, bio, LinkedIn, portrait (loaded first: it is the page's main image).
+- `/about/`: page head "ABOUT" on paper with "IT services and consulting from Frisco, Texas, since 2026.", the story
+  with the C (traced once on a clock as it comes into view, then filled), then the founder
+  (`src/components/Founder.astro`, `#founder`). The client's manager asked for the founder inside About (2026-11-19);
+  the old `/founder/` page redirects there (`public/_redirects`).
+- Founder: name, role, then the client's message (2026-11-19): "Driving Innovation. / Delivering Excellence." in the
+  two-weight display style, three paragraphs, and "Turning Ambitions into Achievements. Transforming Vision into
+  Reality." as a large light quote; LinkedIn link. The portrait stays in view beside the text on desktop, comes first
+  on phones. "Matrix Missions" in the supplied text was corrected to Cresco Prime with the client's approval.
+- `/careers/` (`src/pages/careers/index.astro`): page head "CAREERS" on charcoal, then one row per open role (title in
+  the display cut, department and experience in mono, an arrow; the lime hexagon light on hover). Each row opens
+  `/careers/<role>/` (`src/pages/careers/[slug].astro`): back link, the title, then the overview, responsibilities,
+  required skills (and preferred qualifications where given) beside a sticky column with the facts and one "Apply for
+  this role" pill (an email to hr@crescoprime.com with the role as the subject). On phones the facts and Apply come
+  first.
+- Roles live in `src/lib/jobs.js` (the client's text; departments joined with a middle dot and ranges written "4 to 8
+  years", no dashes). All are fully remote, open to applicants in the US and worldwide; six are contract, SAP FICO is
+  full-time (client, 2026-11-19). Each role page carries a JobPosting (TELECOMMUTE, applicant country US: Google
+  cannot express "worldwide"; add countries in `remote.countries`).
+
+## Application form (2026-11-19)
+
+- Apply on a role page opens a native dialog that slides in from the right (full screen on phones), the role filled
+  in. Questions: name, email, phone, where based, total years, years with the role's key skill (`core` in jobs.js),
+  current role (optional), notice period, expected compensation (optional), LinkedIn (optional), CV (PDF or Word,
+  up to 3 MB), anything else (optional), consent to the privacy policy. No visa or work-authorization question: the
+  roles are remote (client's call). Errors sit under each field and clear as it is fixed. Cloudflare Turnstile loads
+  only when the form opens. Without JavaScript, Apply is an email link.
+- `functions/api/apply.js` (Cloudflare Pages Function) re-checks everything, checks the CV's file signature,
+  verifies Turnstile, and sends two emails: the application with the CV attached to hr@ (reply-to the applicant), then
+  a confirmation to the applicant (reply-to hr@). Nothing is stored. Without its settings it answers "not switched on
+  yet, email your CV".
+- Sending: Resend, from "Cresco Prime Careers <apply@careers.crescoprime.com>" (2026-11-21). The client first chose
+  Microsoft 365, but its admin would not set up or delegate the Entra app, so Resend on the `careers.` subdomain
+  (DNS records under the subdomain only; root MX and SPF untouched) replaced it. The Microsoft Graph path stays in the
+  code (RBAC for Applications, hr@ only) and is used if `RESEND_API_KEY` is absent and the MS_ settings exist.
+  Setup steps and the Cloudflare variables are in the README.
 - Page head (`src/components/PageHead.astro`): the page name in the condensed display cut at `min(17vw, 28svh)`,
   rising through a mask as the transition lifts, the line beside it on desktop and below it on phones.
-- Menu: Services `/services/`, About `/about/`, Founder `/founder/`, Contact `#contact` (the footer of the page you
-  are on). Links use the trailing slash, the canonical address, so Cloudflare Pages never has to redirect them.
-- Tab titles: "IT Services | Cresco Prime", "About | Cresco Prime", "Kalyan Boddula, Founder | Cresco Prime"; the
+- Menu (four items, the client's call): Services `/services/`, About `/about/`, Careers `/careers/` ("Open roles" /
+  "Identity, cloud, SAP, networks"), Contact `#contact` (the footer of the page you are on). Careers stays marked
+  current on a role's page. Links use the trailing slash, the canonical address, so Cloudflare Pages never has to redirect them.
+- Tab titles: "IT Services | Cresco Prime", "About | Cresco Prime", "Careers | Cresco Prime", "<Role> | Careers |
+  Cresco Prime"; the
   home keeps "Cresco Prime | IT Services and Consulting".
 
 ## Search engines (2026-11-17)
@@ -173,11 +207,13 @@ Never text on the light ground.
 - Company facts live once in `src/lib/site.js` (also the service groups), and every page carries them as schema.org
   JSON-LD: ProfessionalService (Cresco Prime LLC, Frisco TX, founded 2026, email, phone +1 248 491 9357, LinkedIn,
   Instagram, the services it knows) and WebSite. Pages add their own: the Services page an ItemList of Service,
-  About an AboutPage, Founder a Person and ProfilePage, and each inner page a Home > Page breadcrumb.
+  About an AboutPage and Kalyan as a Person, Careers an ItemList of roles, each role a JobPosting (once its location
+  and type are set), and each inner page a breadcrumb (Home > Careers > Role on role pages).
 - Share card: `public/og.png` (1200x630: the mark with the lime cut, CRESCO PRIME, "IT services and consulting /
   Frisco, Texas"), set as og:image and a large Twitter card. `public/logo.png` (512, for the structured data),
   `apple-touch-icon.png` (180), `favicon-32.png` beside the SVG favicon. All rendered from the real mark and font.
-- `public/sitemap.xml` lists all six pages with dates; `robots.txt` points to it.
+- `/sitemap.xml` is generated (`src/pages/sitemap.xml.js`) from the fixed pages plus one entry per role, so opening
+  or closing a role updates it; `robots.txt` points to it.
 - Off-site work that decides the ranking (the client's to do): a Google Business Profile for Frisco, Google Search
   Console with the sitemap, the same name, area and phone everywhere, reviews, and new pages over time.
 

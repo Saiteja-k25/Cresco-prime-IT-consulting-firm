@@ -101,6 +101,12 @@ p {
   transition: transform 0.16s var(--ease-out);
   -webkit-tap-highlight-color: transparent;
 }
+button.cta {
+  border: 0;
+  background: transparent; /* the pill is drawn by the pseudo-elements, as on the link version */
+  font-family: inherit;
+  cursor: pointer;
+}
 .cta:focus-visible {
   --on: 1;
   --t: 0.35s;
