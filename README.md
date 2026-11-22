@@ -59,7 +59,7 @@ that load only where they are needed.
 - **Search engines:** canonical URLs, Open Graph and Twitter cards with a share image, schema.org JSON-LD
   (ProfessionalService, WebSite, Service list, Person, job postings, breadcrumbs), a generated `sitemap.xml` and
   `robots.txt`.
-- **Privacy:** no cookies, analytics, trackers or forms.
+- **Privacy:** no analytics or trackers; the only form is the job application, which stores nothing on the website.
 
 ## Getting started
 
@@ -117,6 +117,19 @@ When you add or remove a fixed page, add it to the list in `src/pages/sitemap.xm
 
 Once the repository is connected, every push to `main` builds and publishes the site. Pages are generated as folders, so URLs end in a slash
 (`/services/`), which is also the canonical form used in links and in the sitemap.
+
+### Domain and DNS
+
+| What | Where |
+| --- | --- |
+| Domain registration (crescoprime.com) | Hostinger |
+| DNS | Cloudflare, same account as the Pages project (nameservers set at Hostinger) |
+| Website address | `https://www.crescoprime.com`; `crescoprime.com` redirects there (Cloudflare Redirect Rule) |
+| Email | Microsoft 365 (MX, SPF, autodiscover records in Cloudflare DNS, all DNS only) |
+| Search | Google Search Console, domain property verified by a TXT record; sitemap submitted |
+
+Keep the Microsoft 365 records and the Google and Resend verification records when editing DNS. DESIGN.md lists
+every record.
 
 ## Job applications
 

@@ -262,7 +262,15 @@ Never text on the light ground.
 - GitHub: `Saiteja-k25/Cresco-prime-IT-consulting-firm`, branch `main`. Cloudflare Pages project `cresco-prime`
   (build `npm run build`, output `dist`, Node from `.node-version`), live at https://cresco-prime.pages.dev and
   rebuilt on every push to `main`.
-- crescoprime.com still points to the old site on Netlify (Netlify DNS). Its Microsoft 365 email records must move
-  with the DNS: MX `crescoprime-com.mail.protection.outlook.com` (priority 0), TXT
-  `v=spf1 include:spf.protection.outlook.com -all`, the LinkedIn verification TXT, CNAME `autodiscover` to
-  `autodiscover.outlook.com`. No DKIM or DMARC records exist yet.
+- Domain (2026-11-22): crescoprime.com is registered at Hostinger; its DNS moved from Netlify DNS to the same
+  Cloudflare account as the Pages project (nameservers `kristina` and `plato.ns.cloudflare.com`). The site lives at
+  https://www.crescoprime.com; a Redirect Rule sends crescoprime.com to www with the path and query kept, and
+  Always Use HTTPS is on.
+- DNS records kept for Microsoft 365, all DNS only: MX `crescoprime-com.mail.protection.outlook.com` (priority 0),
+  TXT `v=spf1 include:spf.protection.outlook.com -all`, the LinkedIn verification TXT, CNAME `autodiscover` to
+  `autodiscover.outlook.com`. Resend: CNAMEs `send.careers` and `rsend.careers` to `*.forge.rmta.net` and the DKIM
+  TXT `resend._domainkey.careers`. DMARC TXT `_dmarc` = `v=DMARC1; p=none;` (monitor only; it never blocks mail).
+  Google Search Console: TXT `google-site-verification=…` on the root verifies the domain property `crescoprime.com`
+  (owned by the info69k Google account), and `https://www.crescoprime.com/sitemap.xml` is submitted. No Microsoft
+  DKIM records exist yet.
+- Test (2026-11-22): a test application on www.crescoprime.com delivered both emails through Resend.
