@@ -204,6 +204,19 @@ const sections = [
   const holder = dialog.querySelector('[data-turnstile]');
   const MAX_CV = 3 * 1000 * 1000;
   let widget = null;
+  let pending = null; // the spam check of the current Submit
+
+  // Runs Cloudflare's check now and resolves with a fresh token (rejects with Cloudflare's error code).
+  const humanCheck = () =>
+    new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject('slow'), 120000); // room to notice and tick the box
+      pending = {
+        resolve: (t) => (clearTimeout(timer), resolve(t)),
+        reject: (c) => (clearTimeout(timer), reject(c)),
+      };
+      window.turnstile.reset(widget);
+      window.turnstile.execute(widget);
+    }).finally(() => (pending = null));
 
   // Cloudflare's bot check loads only when someone opens the form.
   const turnstileReady = () =>
@@ -218,13 +231,34 @@ const sections = [
           document.head.append(s);
         });
 
-  const open = async () => {
+  let ready = null; // settles once the widget is on the page; Submit waits for it
+  const open = () => {
     dialog.showModal();
     lenis?.stop();
+    ready ??= load();
+  };
+  const load = async () => {
     try {
       await turnstileReady();
-      widget ??= window.turnstile.render(holder, { sitekey: dialog.dataset.sitekey, theme: 'light', size: 'flexible' });
+      // The check runs on Submit, not on open: a token made on open can expire or stall while someone types on a
+      // phone or leaves the page for the file picker. The box shows only if Cloudflare wants a tick.
+      widget ??= window.turnstile.render(holder, {
+        sitekey: dialog.dataset.sitekey,
+        theme: 'light',
+        size: 'flexible',
+        execution: 'execute',
+        appearance: 'interaction-only',
+        retry: 'never',
+        callback: (token) => pending?.resolve(token),
+        'error-callback': (code) => (pending?.reject(code), true),
+        'timeout-callback': () => pending?.reject('timeout'),
+        'before-interactive-callback': () => {
+          say('Please tick “Verify you are human” above to send your application.');
+          holder.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        },
+      });
     } catch {
+      ready = null; // try again on the next open or Submit
       say(`The spam check could not load. You can also email your CV to hr@crescoprime.com.`);
     }
   };
@@ -306,22 +340,27 @@ const sections = [
       say('Please check the highlighted fields.');
       return;
     }
-    // Phones often get Cloudflare's "Verify you are human" box; without its tick the server refuses the form.
+    sendButton.disabled = true;
+    say('Checking the form…');
+    await (ready ??= load()); // the spam check may still be loading on a slow phone
     if (widget === null) {
+      sendButton.disabled = false;
       say('The spam check could not load. Please reload the page, or', 'email your CV to hr@crescoprime.com');
       return;
     }
-    if (!form.elements['cf-turnstile-response']?.value) {
-      say('Please tick “Verify you are human” above, then send again.');
-      holder.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    let token;
+    try {
+      token = await humanCheck();
+    } catch (code) {
+      sendButton.disabled = false;
+      say(`The spam check did not finish (${code}). Please send again, or`, 'email your CV to hr@crescoprime.com');
       return;
     }
-    sendButton.disabled = true;
     say('Sending your application…');
-    let reset = true;
     try {
-      const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
-      reset = response.status !== 400; // a 400 is decided before the spam check, so the tick still counts
+      const body = new FormData(form);
+      body.set('cf-turnstile-response', token);
+      const response = await fetch(form.action, { method: 'POST', body });
       const result = await response.json().catch(() => ({}));
       if (response.ok && result.ok) {
         done.querySelector('[data-out="name"]').textContent = form.elements.name.value.trim().split(/\s+/)[0];
@@ -338,7 +377,6 @@ const sections = [
       say('Your application could not be sent. Please check your connection and try again, or', 'email your CV to hr@crescoprime.com');
     } finally {
       sendButton.disabled = false;
-      if (reset) window.turnstile?.reset(widget);
     }
   });
 </script>
