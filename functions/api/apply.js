@@ -22,6 +22,10 @@ const CV_TYPES = {
   docx: { mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', magic: [0x50, 0x4b, 0x03, 0x04] },
   doc: { mime: 'application/msword', magic: [0xd0, 0xcf, 0x11, 0xe0] },
 };
+const at = (bytes, magic, i = 0) => magic.every((b, k) => bytes[i + k] === b);
+// The PDF standard allows its header anywhere in the first 1024 bytes, and phone apps and scanners often put
+// a few bytes before it; Word files start with theirs.
+const isType = (t, bytes) => (t === CV_TYPES.pdf ? bytes.subarray(0, 1024).some((_, i) => at(bytes, t.magic, i)) : at(bytes, t.magic));
 
 const json = (status, body) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
@@ -58,8 +62,8 @@ export async function onRequestPost({ request, env }) {
     email: text('email', 200),
     phone: text('phone', 40),
     location: text('location', 120),
-    experience_total: text('experience_total', 3),
-    experience_core: text('experience_core', 3),
+    experience_total: text('experience_total', 5),
+    experience_core: text('experience_core', 5),
     current_role: text('current_role', 160),
     notice: text('notice', 120),
     compensation: text('compensation', 120),
@@ -72,7 +76,7 @@ export async function onRequestPost({ request, env }) {
   for (const n of ['name', 'phone', 'location', 'notice']) if (!a[n]) errors[n] = 'Please fill this in.';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email)) errors.email = 'Please enter a valid email address.';
   for (const n of ['experience_total', 'experience_core']) {
-    if (!/^\d{1,2}$/.test(a[n]) || Number(a[n]) > 60) errors[n] = 'Please enter a number of years, 0 to 60.';
+    if (!/^\d{1,2}(\.\d{1,2})?$/.test(a[n]) || Number(a[n]) > 60) errors[n] = 'Please enter a number of years, 0 to 60.'; // 4.5 is fine
   }
   if (a.linkedin && !/^https:\/\/\S+$/.test(a.linkedin)) errors.linkedin = 'Please paste the full link, starting with https://';
   if (!a.consent) errors.consent = 'Please tick this box to send your application.';
@@ -87,11 +91,14 @@ export async function onRequestPost({ request, env }) {
     const ext = (cv.name.match(/\.([a-z0-9]{1,5})$/i)?.[1] || '').toLowerCase();
     cvBytes = new Uint8Array(await cv.arrayBuffer());
     // Some phone file pickers send the CV without an extension: then the contents decide.
-    cvType = ext ? CV_TYPES[ext] : Object.values(CV_TYPES).find((t) => t.magic.every((b, i) => cvBytes[i] === b));
-    if (!cvType || !cvType.magic.every((b, i) => cvBytes[i] === b)) errors.cv = 'Please attach a PDF or Word file.';
+    cvType = ext ? CV_TYPES[ext] : Object.values(CV_TYPES).find((t) => isType(t, cvBytes));
+    if (!cvType || !isType(cvType, cvBytes)) errors.cv = 'Please attach a PDF or Word file.';
   }
 
-  if (Object.keys(errors).length) return json(400, { ok: false, errors, message: 'Please check the highlighted fields.' });
+  if (Object.keys(errors).length) {
+    console.log('Application refused, fields:', Object.keys(errors).join(', ')); // names only, for the live log
+    return json(400, { ok: false, errors, message: 'Please check the highlighted fields.' });
+  }
 
   // Switched off until the settings exist, so a half-configured site never loses an application silently.
   const dryRun = env.MAIL_DRY_RUN === '1';
@@ -111,7 +118,10 @@ export async function onRequestPost({ request, env }) {
   })
     .then((r) => r.json())
     .catch(() => ({ success: false }));
-  if (!verdict.success) return json(403, { ok: false, message: 'The spam check did not pass. Please wait a moment and send the form again.' });
+  if (!verdict.success) {
+    console.log('Application refused, spam check:', (verdict['error-codes'] || []).join(', ') || 'no answer');
+    return json(403, { ok: false, message: 'The spam check did not pass. Please wait a moment and send the form again.' });
+  }
 
   // The two emails.
   const submitted = new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC';

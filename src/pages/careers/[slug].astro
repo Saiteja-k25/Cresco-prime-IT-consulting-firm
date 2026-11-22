@@ -320,6 +320,13 @@ const sections = [
     return errors;
   }
 
+  // On a phone the field with the problem is often far above the button: bring it into view, then focus it.
+  function show(name) {
+    const input = form.elements[name];
+    input?.closest('.field')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    input?.focus({ preventScroll: true });
+  }
+
   // A field's message clears as soon as it is corrected.
   const clear = (e) => {
     if (!e.target.hasAttribute?.('aria-invalid')) return;
@@ -336,7 +343,7 @@ const sections = [
     for (const el of form.elements) if (el.name && el.id) mark(el.name, errors[el.name]);
     const first = Object.keys(errors)[0];
     if (first) {
-      form.elements[first].focus();
+      show(first);
       say('Please check the highlighted fields.');
       return;
     }
@@ -371,7 +378,10 @@ const sections = [
         form.reset();
         return;
       }
-      if (result.errors) for (const [n, m] of Object.entries(result.errors)) mark(n, m);
+      if (result.errors) {
+        for (const [n, m] of Object.entries(result.errors)) mark(n, m);
+        show(Object.keys(result.errors)[0]);
+      }
       say(result.message || 'Something went wrong. Please try again, or', result.message ? null : 'email your CV to hr@crescoprime.com');
     } catch {
       say('Your application could not be sent. Please check your connection and try again, or', 'email your CV to hr@crescoprime.com');
