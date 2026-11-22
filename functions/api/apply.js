@@ -84,9 +84,10 @@ export async function onRequestPost({ request, env }) {
   if (!cv || typeof cv === 'string' || cv.size === 0) errors.cv = 'Please attach your CV.';
   else if (cv.size > MAX_CV) errors.cv = 'This file is over 3 MB. Please attach a smaller version.';
   else {
-    const ext = (cv.name.match(/\.([a-z]+)$/i)?.[1] || '').toLowerCase();
-    cvType = CV_TYPES[ext];
+    const ext = (cv.name.match(/\.([a-z0-9]{1,5})$/i)?.[1] || '').toLowerCase();
     cvBytes = new Uint8Array(await cv.arrayBuffer());
+    // Some phone file pickers send the CV without an extension: then the contents decide.
+    cvType = ext ? CV_TYPES[ext] : Object.values(CV_TYPES).find((t) => t.magic.every((b, i) => cvBytes[i] === b));
     if (!cvType || !cvType.magic.every((b, i) => cvBytes[i] === b)) errors.cv = 'Please attach a PDF or Word file.';
   }
 

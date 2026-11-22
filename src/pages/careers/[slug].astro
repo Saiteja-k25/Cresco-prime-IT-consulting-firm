@@ -279,7 +279,8 @@ const sections = [
     if (li && !/^https:\/\/\S+$/.test(li)) errors.linkedin = 'Please paste the full link, starting with https://';
     const cv = form.elements.cv.files[0];
     if (!cv) errors.cv = 'Please attach your CV.';
-    else if (!/\.(pdf|docx?)$/i.test(cv.name)) errors.cv = 'Please attach a PDF or Word file.';
+    // Some phone file pickers drop the extension; the server then checks the file's contents instead.
+    else if (/\.[a-z0-9]{1,5}$/i.test(cv.name) && !/\.(pdf|docx?)$/i.test(cv.name)) errors.cv = 'Please attach a PDF or Word file.';
     else if (cv.size > MAX_CV) errors.cv = 'This file is over 3 MB. Please attach a smaller version.';
     if (!form.elements.consent.checked) errors.consent = 'Please tick this box to send your application.';
     return errors;
@@ -305,10 +306,22 @@ const sections = [
       say('Please check the highlighted fields.');
       return;
     }
+    // Phones often get Cloudflare's "Verify you are human" box; without its tick the server refuses the form.
+    if (widget === null) {
+      say('The spam check could not load. Please reload the page, or', 'email your CV to hr@crescoprime.com');
+      return;
+    }
+    if (!form.elements['cf-turnstile-response']?.value) {
+      say('Please tick “Verify you are human” above, then send again.');
+      holder.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      return;
+    }
     sendButton.disabled = true;
     say('Sending your application…');
+    let reset = true;
     try {
       const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+      reset = response.status !== 400; // a 400 is decided before the spam check, so the tick still counts
       const result = await response.json().catch(() => ({}));
       if (response.ok && result.ok) {
         done.querySelector('[data-out="name"]').textContent = form.elements.name.value.trim().split(/\s+/)[0];
@@ -325,7 +338,7 @@ const sections = [
       say('Your application could not be sent. Please check your connection and try again, or', 'email your CV to hr@crescoprime.com');
     } finally {
       sendButton.disabled = false;
-      if (widget !== null) window.turnstile?.reset(widget);
+      if (reset) window.turnstile?.reset(widget);
     }
   });
 </script>
